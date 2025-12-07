@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Customer Login - MyFin Bank</title>
+
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script type="module" src="/assets/js/common-header-footer.js"></script>
+
+    <style>
+        /* ANIMATED BACKGROUND */
+        body {
+    background: linear-gradient(120deg,
+        #4facfe,
+        #748ffc,
+        #5ee7df,
+        #a8c0ff
+    );
+    background-size: 350% 350%;
+    animation: moveBg 18s ease infinite;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Animation */
+@keyframes moveBg {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+        /* CENTER CARD */
+        .page-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* CLEAN CARD */
+        .login-card {
+            width: 420px;
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        /* INPUT FIX → Equal spacing, symmetric */
+        .login-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 14px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        /* BUTTON balanced */
+        .btn-login {
+            width: 100%;
+            padding: 11px;
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .btn-login:hover {
+            opacity: 0.92;
+        }
+
+        #msg {
+            margin-top: 8px;
+            color: red;
+            font-size: 14px;
+        }
+
+        .register-link {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="insert-header"></div>
+
+<div class="page-center">
+    <div class="login-card">
+
+        <h2>Customer Login</h2>
+
+        <input id="email" class="login-input" type="email" placeholder="Enter email">
+        <input id="password" class="login-input" type="password" placeholder="Enter password">
+
+        <button id="btn" class="btn-login">Login</button>
+
+        <div class="register-link">
+            New user? <a href="/customer/register.html">Register here</a>
+        </div>
+
+        <div id="msg"></div>
+
+    </div>
+</div>
+
+<div id="insert-footer"></div>
+
+<script type="module">
+import { saveToken } from '/assets/js/auth.js';
+
+document.getElementById('btn').onclick = async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const msg = document.getElementById('msg');
+    msg.textContent = "";
+
+    if (!email || !password) {
+        msg.textContent = "All fields must be filled.";
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/customers/login', {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const d = await res.json();
+        if (!res.ok) {
+            msg.textContent = d.message || "Login failed";
+            return;
+        }
+
+        saveToken("CUSTOMER", d.token, d.customerId || d.userId);
+        window.location.href = "/customer/dashboard.html";
+
+    } catch (err) {
+        msg.textContent = "Network error";
+    }
+};
+</script>
+
+</body>
+</html>

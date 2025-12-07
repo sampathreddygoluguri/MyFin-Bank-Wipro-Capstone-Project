@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Register – MyFin Bank</title>
+
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <script type="module" src="/assets/js/common-header-footer.js"></script>
+
+    <style>
+        /* ANIMATED BACKGROUND */
+        body {
+    background: linear-gradient(120deg,
+        #4facfe,
+        #748ffc,
+        #5ee7df,
+        #a8c0ff
+    );
+    background-size: 350% 350%;
+    animation: moveBg 18s ease infinite;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Animation */
+@keyframes moveBg {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+        /* CENTER BOX */
+        .page-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* REGISTER CARD */
+        .register-card {
+            width: 420px;
+            background: #fff;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.15);
+        }
+
+        .register-card h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        .reg-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 14px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 11px;
+            background: #1976d2;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .btn-register:hover { opacity: 0.92; }
+
+        #msg {
+            margin-top: 8px;
+            color: red;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .login-link {
+            margin-top: 12px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="insert-header"></div>
+
+<div class="page-center">
+
+    <div class="register-card">
+
+        <h2>Create Your Account</h2>
+
+        <input id="firstName" class="reg-input" placeholder="First name">
+        <input id="lastName" class="reg-input" placeholder="Last name">
+        <input id="email" class="reg-input" type="email" placeholder="Email">
+        <input id="password" class="reg-input" type="password" placeholder="Password">
+        <input id="phone" class="reg-input" placeholder="Phone number">
+
+        <button id="btn" class="btn-register">Register</button>
+
+        <div class="login-link">
+            Already have an account? <a href="/customer/login.html">Login here</a>
+        </div>
+
+        <div id="msg"></div>
+    </div>
+
+</div>
+
+<div id="insert-footer"></div>
+
+<script type="module">
+document.getElementById("btn").onclick = async () => {
+    const firstName = document.getElementById("firstName").value.trim();
+    const lastName  = document.getElementById("lastName").value.trim();
+    const email     = document.getElementById("email").value.trim();
+    const password  = document.getElementById("password").value;
+    const phone     = document.getElementById("phone").value.trim();
+    const msg       = document.getElementById("msg");
+
+    msg.textContent = "";
+
+    // Validation
+    if (!firstName || !lastName || !email || !password || !phone) {
+        msg.textContent = "All fields must be filled.";
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/customers/register", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                firstName, lastName, email, password, phone
+            })
+        });
+
+        const d = await res.json();
+
+        if (!res.ok) {
+            msg.textContent = d.message || "Registration failed";
+            return;
+        }
+
+        alert("Registration successful! Please login.");
+        window.location.href = "/customer/login.html";
+
+    } catch (err) {
+        msg.textContent = "Network error";
+    }
+};
+</script>
+
+</body>
+</html>

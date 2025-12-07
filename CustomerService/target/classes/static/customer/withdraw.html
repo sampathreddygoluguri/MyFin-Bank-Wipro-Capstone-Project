@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Withdraw - MyFin</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/style.css">
+
+<style>
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    min-height: 100vh;
+    padding-top: 15px;
+}
+.sidebar a {
+    display: block;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    color: #444;
+}
+.sidebar a:hover {
+    background: rgba(25,118,210,0.15);
+    color: #1976d2;
+}
+.sidebar a.active {
+    background: rgba(25,118,210,0.18);
+    color: #1976d2;
+    border-left: 4px solid #1976d2;
+}
+
+/* Footer */
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 240px;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.85rem;
+}
+
+/* Clock */
+.clock {
+    font-weight: 600;
+    color: #555;
+}
+
+/* Success/Error Banner */
+.alert-box {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    font-weight: 600;
+    display: none;
+    text-align: center;
+}
+.alert-success {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+.alert-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="bg-white shadow-sm p-3 d-flex justify-content-between align-items-center">
+    <div class="h5 fw-bold text-dark">MyFin Bank</div>
+    <div class="d-flex align-items-center gap-3">
+        <div id="dashboardClock" class="clock"></div>
+        <button id="navLogout" class="btn btn-sm btn-outline-primary">Logout</button>
+    </div>
+</div>
+
+<div class="d-flex">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <a href="/customer/dashboard.html">Dashboard</a>
+    <a href="/customer/loans.html">Loan Center</a>
+    <a href="/customer/dashboard.html#investments">Investments</a>
+    <a href="/customer/dashboard.html#transactions">Transactions</a>
+    <a class="active" href="#">Withdraw</a>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="flex-grow-1 p-4">
+
+    <button class="btn btn-outline-primary mb-3" onclick="history.back()">⬅ Back</button>
+
+    <!-- Success/Error Message -->
+    <div id="alertBox" class="alert-box"></div>
+
+    <div class="card p-4" style="max-width:450px;">
+        <h3 class="text-primary mb-3">Withdraw Money</h3>
+
+        <label class="form-label">Your Account Number</label>
+        <input id="accountNumber" class="form-control mb-2" readonly>
+
+        <label class="form-label">Confirm Account Number</label>
+        <input id="confirmAccount" class="form-control mb-2">
+
+        <label class="form-label">Amount</label>
+        <input id="amount" class="form-control mb-2" type="number">
+
+        <label class="form-label">Remark (optional)</label>
+        <input id="remark" class="form-control mb-3">
+
+        <button id="btnWithdraw" class="btn btn-danger w-100">Withdraw</button>
+    </div>
+
+    <!-- Return to Dashboard -->
+    <div class="text-center mt-4">
+        <a href="/customer/dashboard.html" class="btn btn-secondary px-4">Return to Dashboard</a>
+    </div>
+
+</main>
+</div>
+
+<footer>© <span id="year"></span> MyFin Bank</footer>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+setInterval(() => {
+    document.getElementById("dashboardClock").textContent = 
+        new Date().toLocaleTimeString("en-GB");
+}, 1000);
+</script>
+
+<script type="module">
+import { authFetch, getCurrentCustomerId } from "/assets/js/auth.js";
+
+let acctNum = null;
+
+function showMessage(type, text) {
+    const msg = document.getElementById("alertBox");
+    msg.classList.remove("alert-success", "alert-error");
+
+    if (type === "success") msg.classList.add("alert-success");
+    else msg.classList.add("alert-error");
+
+    msg.textContent = text;
+    msg.style.display = "block";
+
+    setTimeout(() => msg.style.display = "none", 3000);
+}
+
+async function loadAccount() {
+    const id = getCurrentCustomerId();
+    const res = await authFetch(`/api/customers/accountdetails/${id}`, {}, "CUSTOMER");
+    const accounts = await res.json();
+
+    acctNum = accounts[0].accountNumber;
+    document.getElementById("accountNumber").value = acctNum;
+}
+
+document.getElementById("btnWithdraw").onclick = async () => {
+    const confirm = document.getElementById("confirmAccount").value.trim();
+    const amount = document.getElementById("amount").value;
+    const remark = document.getElementById("remark").value;
+
+    if (confirm !== acctNum) {
+        showMessage("error", "Account number does not match!");
+        return;
+    }
+
+    const res = await authFetch(`/api/customers/accounts/withdraw`, {
+        method: "POST",
+        body: JSON.stringify({ accountNumber: acctNum, confirmAccountNumber: confirm, amount, remark })
+    }, "CUSTOMER");
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        showMessage("error", data.message || "Withdraw failed!");
+        return;
+    }
+
+    showMessage("success", "Withdraw successful!");
+};
+
+loadAccount();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+/* chat widget */
+#chat-floating-btn {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	z-index: 9999;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: #1976d2;
+	color: white;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 24px;
+	cursor: pointer;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.chat-widget {
+	position: fixed;
+	right: 20px;
+	bottom: 90px;
+	width: 360px;
+	max-height: 520px;
+	z-index: 9999;
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+	display: none;
+	background: #fff;
+	font-family: Inter, Arial, sans-serif;
+}
+
+/* fullscreen */
+.chat-widget.fullscreen {
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	border-radius: 0;
+}
+
+
+/* header */
+.chat-header {
+	background: #1976d2;
+	color: #fff;
+	padding: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.chat-header .title {
+	font-weight: 700;
+}
+
+.chat-header .controls button {
+	margin-left: 8px;
+	background: transparent;
+	border: none;
+	color: #fff;
+	cursor: pointer;
+	font-size: 16px;
+}
+
+/* body */
+.chat-body {
+	display: flex;
+	height: 420px;
+	min-height: 220px;
+}
+
+/* left: convo list (admin only) */
+.chat-convos {
+	width: 34%;
+	border-right: 1px solid #eee;
+	overflow-y: auto;
+	background: #fafafa;
+}
+
+.chat-convos .conv-item {
+	padding: 10px;
+	border-bottom: 1px solid #f0f0f0;
+	cursor: pointer;
+}
+
+.conv-item.unread {
+	background: #fff;
+	font-weight: 700;
+}
+
+.conv-item .meta {
+	font-size: 12px;
+	color: #666;
+	margin-top: 6px;
+}
+
+/* right: messages */
+.chat-messages {
+	width: 66%;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+}
+
+.chat-messages.full-width {
+  width: 100%;
+}
+.messages-list {
+	flex: 1;
+	overflow-y: auto;
+	padding-right: 8px;
+}
+
+.message {
+	margin-bottom: 10px;
+}
+
+.message.me {
+	text-align: right;
+}
+
+.message .bubble {
+	display: inline-block;
+	padding: 8px 12px;
+	background: #f1f1f1;
+	border-radius: 8px;
+}
+
+.message.me .bubble {
+	background: #1976d2;
+	color: #fff;
+}
+
+/* composer */
+.chat-composer {
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:white;
+  border-top:1px solid #ececec;
+  position: sticky;
+  bottom: 0;
+  z-index: 20; /* ensure composer sits above message list */
+  align-items:center;
+}
+.chat-composer input {
+  flex: 1;
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #dcdfe6;
+  outline: none;
+  min-width: 0; /* allow shrinking on small screens */
+}
+.chat-composer button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #0d6efd;
+  color: white;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  min-width: 64px;
+}
