@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MyFin Bank – Customer Dashboard</title>
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Main styles (your global file) -->
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/chat-widget.css">
+
+<style>
+  /* Page background + glossy effect */
+  body {
+    background: linear-gradient(180deg, #eef4fb 0%, #e6eef9 50%, #f5f8fc 100%);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin: 0;
+    color: #222;
+  }
+
+  .layout { display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    background: #fff;
+    border-right: 1px solid rgba(20,30,40,0.06);
+    display:flex;
+    flex-direction:column;
+    padding-top:20px;
+    box-shadow: 0 2px 12px rgba(22,35,60,0.03);
+  }
+  .side-header { text-align:center; padding: 8px 12px; }
+  .side-header img { width: 64px; height:64px; border-radius:8px; box-shadow: 0 4px 18px rgba(25,118,210,0.06); }
+  .side-header h4 { margin:8px 0 4px; color: #0b57b3; font-weight:700; }
+  .side-header .username { color: #567; font-size:0.9rem; }
+
+  .menu { margin-top:8px; }
+  .menu a {
+    display:block; padding:12px 18px; color:#334; text-decoration:none; font-weight:500;
+    border-left:4px solid transparent;
+  }
+  .menu a.active { background: rgba(25,118,210,0.08); border-left:4px solid #1976d2; color:#1976d2; }
+  .menu a:hover { background: rgba(25,118,210,0.06); color:#1976d2; }
+
+  .logout-btn {
+    margin-top:auto; margin-bottom:18px; padding:12px 18px; color:#c0392b; cursor:pointer; font-weight:600;
+    border-top:1px solid rgba(20,30,40,0.03);
+  }
+
+  /* MAIN */
+  main { flex:1; min-width:0; display:flex; flex-direction:column; }
+
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 22px; background:#fff; border-bottom:1px solid rgba(20,30,40,0.04);
+    box-shadow: 0 4px 18px rgba(22,35,60,0.03);
+  }
+  .topbar .brand { font-weight:700; color:#111; }
+  .clock { font-weight:700; color:#111; }
+
+  .container {
+    max-width:1100px; width:100%; margin: 24px auto; padding: 0 18px 60px;
+  }
+
+  /* Cards (slightly glossy) */
+  .card {
+    border-radius:12px; padding:18px; background: linear-gradient(180deg,#ffffff,#fbfdff);
+    box-shadow: 0 10px 24px rgba(18,32,62,0.06);
+  }
+
+  .card + .card { margin-top:18px; }
+
+  h3.page-title { margin-bottom:18px; color:#0b57b3; font-weight:700; }
+
+  /* Balance eye */
+  #balanceEye { cursor:pointer; margin-left:8px; font-size:18px; color:#1976d2; vertical-align:middle; }
+
+  /* FD/RD buttons grouping */
+  .invest-actions { margin:12px 0; display:flex; gap:10px; }
+
+  /* Table tweaks */
+  table.table { background:transparent; }
+  .table thead th { color:#667; font-weight:600; border-bottom:1px solid rgba(20,30,40,0.06); }
+
+  /* Modal overlay used by the simple modals below */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background: rgba(8,12,24,0.45);
+    align-items:center; justify-content:center; z-index:9999;
+  }
+  .modal-box {
+    width: 420px; max-width:calc(100% - 40px); background: #ffffff; border-radius:10px; padding:18px;
+    box-shadow: 0 10px 30px rgba(8,12,24,0.25);
+  }
+  .modal-box h4 { color:#1976d2; margin-bottom:12px; }
+
+  /* Footer small */
+  .page-footer { text-align:center; color:#6b6f78; padding:12px 0; margin-top:30px; font-size:0.9rem; }
+
+  /* chat floating fallback alignment (keeps it visible) */
+  #chat-floating-btn { position: fixed; right: 22px; bottom: 18px; z-index: 2000; cursor:pointer; }
+
+  /* small responsive */
+  @media (max-width: 900px) {
+    .sidebar { display:none; }
+    main { padding: 8px; }
+    .container { margin: 8px; }
+  }
+  /* FIX MODAL LAYOUT */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    width: 430px;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+/* Checkbox + (or) alignment */
+.fd-flex-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.fd-or {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    margin: 6px 0;
+}
+  
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="side-header">
+      <img src="/favicon.ico" alt="logo">
+      <h4>MyFin Bank</h4>
+      <div class="username" id="userFullName">Loading...</div>
+    </div>
+
+    <nav class="menu">
+      <a href="/customer/dashboard.html" class="active">Dashboard</a>
+      <a href="#investments">Investments</a>
+      <a href="#" onclick="goToLoanPage()">Loan Center</a>
+      <a href="#transactions">Transactions</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="brand">MyFin Bank</div>
+      <div class="d-flex align-items-center gap-3">
+        <div style="font-size:0.9rem;color:#666;">Live Time:</div>
+        <div id="dashboardClock" class="clock">--:--:--</div>
+      </div>
+      <button id="topLogoutBtn" class="btn btn-outline-danger btn-sm fw-bold">
+      ⏻ Logout
+    </button>
+    </div>
+
+    <!-- Page content container -->
+    <div class="container">
+
+      <!-- Welcome card -->
+      <div class="card mb-4">
+        <div class="card-body p-0">
+          <div style="padding:18px;">
+            <h3 id="welcome" class="page-title"></h3>
+            <p class="mb-1">Email: <span id="emailLine"></span></p>
+            <p>
+  Phone: <span id="phoneLine"></span>
+  <button class="btn btn-sm btn-outline-primary ms-2"
+          onclick="openPhoneUpdateModal()">Update</button>
+</p>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Account card -->
+      <div id="accountCardWrapper" class="card mb-4">
+        <div class="card-body">
+          <h5 style="font-weight:700;">Your Account</h5>
+          <p class="mb-2">Account Number: <b id="acctNumber">-</b></p>
+
+          <p class="mb-3">
+            Balance:
+            <span id="balance">₹0.00</span>
+            <span id="balanceEye" title="Show / hide balance">👁️</span>
+          </p>
+
+          <div id="acctActions" class="mb-0">
+            <button class="btn btn-primary me-2" onclick="openDepositModal()">Deposit</button>
+            <button class="btn btn-primary me-2" onclick="openWithdrawModal()">Withdraw</button>
+            <button class="btn btn-primary" onclick="openTransferModal()">Transfer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No account area (hidden when has account) -->
+      <div id="noAccountArea" class="card mb-4" style="display:none;">
+        <div class="card-body">
+          <h5>No Account Found</h5>
+          <p>Create an account to start banking.</p>
+          <button id="btnCreateAccount" class="btn btn-primary">Create Account</button>
+        </div>
+      </div>
+
+      <!-- Investments header + actions -->
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h3 id="investments">Investments</h3>
+        <div class="invest-actions">
+          <button class="btn btn-outline-primary" onclick="openCreateFdModal()">Create FD</button>
+          <button class="btn btn-outline-primary" onclick="openCreateRdModal()">Create RD</button>
+        </div>
+      </div>
+
+      <div id="noInvestmentsBox" class="card p-3 mb-3" style="display:none;">
+        No investments yet!
+      </div>
+
+      <div id="fdSection" class="card mb-4" style="display:none;">
+        <div class="card-body">
+          <h5>Fixed Deposits</h5>
+          <table class="table">
+            <thead><tr><th>ID</th><th>Principal</th><th>Rate</th><th>Months</th><th>Maturity</th><th>Status</th></tr></thead>
+            <tbody id="fdTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="rdSection" class="card mb-4" style="display:none;">
+        <div class="card-body">
+          <h5>Recurring Deposits</h5>
+          <table class="table">
+            <thead><tr><th>ID</th><th>Monthly</th><th>Total Paid</th><th>Next</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="rdTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Transactions -->
+      <h3 id="transactions">Recent Transactions</h3>
+      <div class="card mb-4">
+        <div class="card-body">
+          <table class="table" id="txTable">
+            <thead><tr><th>Date</th><th>Type</th><th>Remark</th><th>Amount</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page-footer">© <span id="yearFooter"></span> MyFin Bank • All rights reserved. • Developed For Capstone</div>
+    </div>
+  </main>
+</div>
+
+<!-- ------------------------- Modals ------------------------- -->
+<!-- Generic modal overlay pattern -->
+<div id="createAccountModal" class="modal-overlay" style="display:none; align-items:center;">
+  <div class="modal-box">
+    <h4>Create Account</h4>
+    <label>Account Type</label>
+    <select id="acctType" class="form-select mb-2">
+      <option value="SAVINGS">Savings</option>
+    </select>
+    <label>Initial deposit (optional)</label>
+    <input id="initialDeposit" type="number" class="form-control mb-3" placeholder="0">
+    <div id="modalMsg" style="color:#c0392b; min-height:18px;"></div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+      <button id="cancelCreateAccount" class="btn btn-secondary">Cancel</button>
+      <button id="confirmCreateAccount" class="btn btn-primary">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Update Phone Modal ================= -->
+<div id="phoneModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:400px;">
+      <h3 class="mb-3 text-primary">Update Mobile Number</h3>
+
+      <label>Current Mobile Number:</label>
+      <input id="currentPhone" class="form-control mb-2" disabled>
+
+      <label>New Mobile Number:</label>
+      <input id="newPhone" class="form-control mb-3" placeholder="Enter new mobile number">
+
+      <div class="d-flex justify-content-end">
+          <button class="btn btn-secondary me-2" onclick="closePhoneUpdateModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitPhoneUpdate()">Update</button>
+      </div>
+
+      <p id="phoneUpdateMsg" class="text-danger mt-2"></p>
+  </div>
+</div>
+
+<!-- ================= Deposit Modal ================= -->
+<div id="depositModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <p>Your Account: <b id="depAcctNum"></b></p>
+        <h3>Deposit</h3>
+
+        <label>Amount:</label>
+        <input type="number" id="depAmount" class="form-control mb-2">
+
+        <label>Confirm Account Number:</label>
+        <input id="depConfirm" class="form-control mb-2">
+
+        <label>Remark (optional):</label>
+        <input id="depRemark" class="form-control mb-2" placeholder="e.g. Salary for Dec">
+
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-secondary me-2" onclick="closeDepositModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitDeposit()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= Withdraw Modal ================= -->
+<div id="withdrawModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <p>Your Account: <b id="wdAcctNum"></b></p>
+        <h3>Withdraw</h3>
+
+        <label>Amount:</label>
+        <input type="number" id="wdAmount" class="form-control mb-2">
+
+        <label>Confirm Account Number:</label>
+        <input id="wdConfirm" class="form-control mb-2">
+
+        <label>Remark (optional):</label>
+        <input id="wdRemark" class="form-control mb-2" placeholder="e.g. ATM cash withdrawal">
+
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-secondary me-2" onclick="closeWithdrawModal()">Cancel</button>
+            <button class="btn btn-danger" onclick="submitWithdraw()">Submit</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= Transfer Modal ================= -->
+<div id="transferModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Transfer</h3>
+        <p>From: <b id="trFrom"></b></p>
+
+        <label>To Account Number:</label>
+        <input id="trTo" class="form-control mb-2">
+
+        <label>Amount:</label>
+        <input type="number" id="trAmount" class="form-control mb-2">
+
+        <label>Remark (optional):</label>
+        <input id="trRemark" class="form-control mb-2" placeholder="e.g. Rent for Jan">
+
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-secondary me-2" onclick="closeTransferModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitTransfer()">Submit</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ================= FD Modal ================= -->
+<div id="fdModal" class="modal">
+    <div class="modal-content">
+
+        <h3 class="text-primary mb-3">Create Fixed Deposit</h3>
+
+        <!-- Months selection -->
+        <label class="fw-semibold">Months</label>
+        <select id="fdMonths" class="form-select mb-2">
+            <option value="6">6 Months — 6% P.A</option>
+            <option value="12">12 Months — 7% P.A</option>
+        </select>
+
+        <!-- Auto interest text -->
+        <p id="fdInterest" class="text-primary fw-bold mb-2"></p>
+
+        <!-- Use full balance row -->
+        <div class="fd-flex-row">
+            <input type="checkbox" id="fdUseFull" />
+            <label for="fdUseFull" class="m-0">Use full balance</label>
+        </div>
+
+        <div class="fd-or">(or)</div>
+
+        <!-- Amount field -->
+        <label class="fw-semibold">Amount</label>
+        <input type="number" id="fdAmount" class="form-control mb-3" placeholder="Enter amount">
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-end gap-2">
+            <button class="btn btn-secondary" onclick="closeFdModal()">Cancel</button>
+            <button class="btn btn-primary" id="fdSubmit">Create FD</button>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ================= RD Modal ================= -->
+<div id="rdModal" class="modal">
+  <div class="modal-content" style="max-width:420px;">
+    <h3 class="text-primary mb-3">Create Recurring Deposit</h3>
+
+    <!-- MONTHS + INTEREST -->
+    <label class="form-label">Months</label>
+    <select id="rdMonths" class="form-select mb-3">
+        <option value="6" data-rate="5">6 Months — 5% P.A</option>
+        <option value="12" data-rate="6">12 Months — 6% P.A</option>
+    </select>
+
+    <p id="rdInterest" class="text-secondary mb-3" style="font-weight:500;">
+        Interest Rate: 5% P.A
+    </p>
+
+    <!-- AMOUNT -->
+    <label class="form-label">Monthly Installment</label>
+    <input type="number" id="rdAmount" class="form-control mb-3" placeholder="Enter monthly amount">
+
+    <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-secondary" onclick="closeRdModal()">Cancel</button>
+        <button id="rdSubmit" class="btn btn-primary">Create RD</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- chat server config (used by chat widget module) -->
+<script>window.CHAT_SERVER = "http://localhost:8095";</script>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+<!-- chat-widget init (keeps the same API you had) -->
+<script type="module">
+  import { initChatWidget } from "/assets/js/chat-widget.js";
+  initChatWidget();
+</script>
+
+<!-- Footer year -->
+<script>document.getElementById('yearFooter').textContent = new Date().getFullYear();</script>
+
+<!-- Dashboard logic (external file) -->
+<script type="module" src="/assets/js/customer-dashboard.js"></script>
+
+</body>
+</html>
