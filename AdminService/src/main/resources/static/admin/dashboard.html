@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Dashboard - MyFin</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <!-- Chat widget style -->
+  <link rel="stylesheet" href="/assets/css/chat-widget.css">
+
+  <!-- Shared header/footer loader -->
+  <script type="module" src="/assets/js/common-header-footer.js"></script>
+
+  <!-- Admin dashboard logic -->
+  <script type="module" src="/assets/js/admin-dashboard.js"></script>
+
+  <!-- Admin Notification logic (only top dropdown remains) -->
+  <script type="module" src="/assets/js/admin-notifications.js"></script>
+
+  <!-- CHAT SERVER URL -->
+  <script>window.CHAT_SERVER = "http://localhost:8095";</script>
+
+  <!-- SockJS + STOMP -->
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+  <!-- Chat Widget Init -->
+  <script type="module">
+    import { initChatWidget } from "/assets/js/chat-widget.js";
+    initChatWidget();   
+  </script>
+
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+  <style>
+    /* Background Improved */
+    body {
+      background: linear-gradient(135deg, #f3f6ff, #eef2ff);
+      min-height: 100vh;
+    }
+
+    .top-brand {
+      font-weight: 700;
+    }
+
+    /* Better card colors */
+    .card-info {
+      background: #e9f3ff;
+      border-left: 4px solid #0d6efd;
+    }
+    .card-status {
+      background: #eaffea;
+      border-left: 4px solid #28a745;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="d-flex min-vh-100">
+
+    <!-- SIDEBAR -->
+    <aside class="flex-shrink-0 bg-white border-end" style="width:260px;">
+      <div class="p-3">
+
+        <div class="mb-4 text-center">
+          <img src="/favicon.ico" alt="logo" style="width:48px;height:48px;">
+          <div class="mt-2 fw-bold text-primary">MyFin Admin</div>
+        </div>
+
+        <nav class="nav flex-column">
+          <a class="nav-link active py-2" href="/admin/dashboard.html">Dashboard</a>
+          <a class="nav-link py-2" href="/admin/admin-loans.html">Manage Loans</a>
+        </nav>
+
+        <hr>
+
+        <div class="small text-muted", align="center">
+          MyFin Bank
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-grow-1">
+
+      <!-- TOPBAR -->
+      <header class="bg-white border-bottom shadow-sm">
+        <div class="container-fluid d-flex align-items-center justify-content-between" style="height:64px;">
+          <div></div>
+          <div class="text-center top-brand fs-5">MyFin Bank</div>
+
+          <div class="d-flex align-items-center gap-3 pe-3">
+
+            <!-- Welcome -->
+            <div id="welcome" class="small text-muted"></div>
+
+            <!-- Notifications dropdown -->
+            <div id="notif-area" class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle" id="notifDropdownBtn"
+                      data-bs-toggle="dropdown">
+                Notifications <span id="notif-count" class="badge bg-danger ms-1" style="display:none">0</span>
+              </button>
+
+              <div id="notif-dropdown" class="dropdown-menu dropdown-menu-end p-2" style="min-width:320px;">
+                <div class="small text-muted mb-2">Recent notifications</div>
+                <div id="notif-list">
+                  <div class="text-muted small">No notifications</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Logout -->
+            <a href="/admin/login.html" class="btn btn-sm btn-outline-primary">Logout</a>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <div class="container-fluid p-4">
+
+        <div class="row g-3">
+
+          <!-- TOP CARDS -->
+<div class="col-12">
+  <div class="row g-3">
+
+    <!-- Total Customers -->
+    <div class="col-md-4">
+      <div class="card card-info shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Total Customers</div>
+          <div id="stat-active" class="h4">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-md-4">
+      <div class="card card-status shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">System Status</div>
+          <div id="stat-status" class="h4 text-success">OK</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Time -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="small text-muted">Current Time</div>
+          <div id="stat-clock" class="h4 text-primary">--:--:--</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+          <!-- CUSTOMERS TABLE -->
+          <div class="col-12">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0">All Customers</h5>
+                  <button id="refreshCustomers" class="btn btn-outline-secondary btn-sm">Refresh</button>
+                </div>
+
+                <div id="msg" class="text-danger small mb-2"></div>
+
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle" id="customersTable">
+                    <thead class="table-light">
+                      <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Accounts</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="6" class="small text-muted">Loading...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-4 text-center small text-muted">
+          Manage users, loans, and messages from this panel.
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+<footer class="bg-white border-top py-3 w-100 text-center small text-muted dashboard-footer">
+  © <span id="year"></span> MyFin Bank • All rights reserved. • Developed For Capstone.
+</footer>
+
+
+    </main>
+  </div>
+
+  <<script>
+  // YEAR
+  document.getElementById("year").innerText = new Date().getFullYear();
+
+  // LIVE CLOCK
+  function updateClock() {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    const formatted = `${hh}:${mm}:${ss}`;
+
+    document.getElementById("stat-clock").innerText = formatted;
+
+    // Also update top-right text clock if needed
+    const liveClock = document.getElementById("liveClock");
+    if (liveClock) liveClock.innerText = formatted;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // TOTAL CUSTOMERS
+  function updateTotalCustomersCount() {
+    const rows = document.querySelectorAll("#customersTable tbody tr");
+    let count = 0;
+    rows.forEach(r => {
+      if (!r.querySelector("td[colspan]")) count++;
+    });
+    document.getElementById("stat-active").innerText = count;
+  }
+
+  // Keep checking every 2 seconds
+  setInterval(updateTotalCustomersCount, 2000);
+</script>
+
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
